@@ -6,8 +6,11 @@ export class SoundManager {
 	constructor() {
 		this.ctx = null;
 		this.enabled = true;
-		this.volume = 0.4;
 		this.initialized = false;
+
+		// Load saved volume or default to 0.4
+		const saved = parseFloat(localStorage.getItem("froggerVolume"));
+		this.volume = Number.isFinite(saved) ? saved : 0.4;
 
 		this.sounds = {};
 		this.bgMusic = null;
@@ -53,7 +56,7 @@ export class SoundManager {
 		// Background music (looping)
 		this.bgMusic = new Audio("assets/sounds/background-sound.mp4");
 		this.bgMusic.loop = true;
-		this.bgMusic.volume = 0.15;
+		this.bgMusic.volume = this.volume * 0.375; // BG music at ~37.5% of master
 		this.bgMusic.currentTime = 3;
 		this.horrorMusicActive = false;
 		this.bgMusic.addEventListener("timeupdate", () => {
@@ -245,5 +248,17 @@ export class SoundManager {
 		gain.connect(this.ctx.destination);
 		source.start();
 		source.stop(this.ctx.currentTime + duration);
+	}
+
+	/**
+	 * Sets master volume (0–1). Scales SFX gain and BG music proportionally.
+	 * Persists to localStorage.
+	 */
+	setVolume(val) {
+		this.volume = Math.max(0, Math.min(1, val));
+		if (this.bgMusic) {
+			this.bgMusic.volume = this.volume * 0.375;
+		}
+		localStorage.setItem("froggerVolume", this.volume);
 	}
 }

@@ -13,10 +13,12 @@ body {
     color: #fff;
     font-family: 'Press Start 2P', monospace;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: flex-start;
     align-items: center;
     min-height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
+    padding-top: 10px;
 }
 
 /* Game Container - Arcade Cabinet Feel */
@@ -32,6 +34,8 @@ body {
         0 0 60px rgba(0, 255, 0, 0.05),
         inset 0 0 30px rgba(0, 0, 0, 0.9),
         0 10px 40px rgba(0, 0, 0, 0.6);
+    transform: scale(var(--game-scale, 1));
+    transform-origin: top center;
 }
 
 /* Heads Up Display */
@@ -290,6 +294,205 @@ body {
 @keyframes blinker {
     50% {
         opacity: 0;
+    }
+}
+
+/* Pause Overlay */
+#pause-screen h1 {
+    color: #0f0;
+    text-shadow:
+        4px 4px 0 #005500,
+        0 0 20px rgba(0, 255, 0, 0.4);
+    animation: titleGlow 2s ease-in-out infinite;
+}
+
+/* Settings Gear Button */
+.settings-btn {
+    background: none;
+    border: none;
+    color: #0f0;
+    font-size: 20px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s, transform 0.3s;
+    padding: 0;
+    line-height: 1;
+}
+
+.settings-btn:hover {
+    opacity: 1;
+    transform: rotate(90deg);
+}
+
+/* Settings Overlay */
+#settings-screen {
+    background: rgba(0, 0, 0, 0.95);
+}
+
+.settings-title {
+    color: #0f0 !important;
+    text-shadow:
+        4px 4px 0 #005500,
+        0 0 20px rgba(0, 255, 0, 0.4) !important;
+    font-size: 32px !important;
+}
+
+.settings-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    width: 80%;
+    max-width: 350px;
+}
+
+.settings-group label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: #0f0;
+    text-shadow: 0 0 6px rgba(0, 255, 0, 0.3);
+    letter-spacing: 2px;
+}
+
+.slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.slider-icon {
+    font-size: 16px;
+}
+
+.slider-value {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    color: #0f0;
+    text-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+}
+
+/* Custom Range Slider */
+.volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 8px;
+    background: #222;
+    border: 1px solid #0f0;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #0f0;
+    border-radius: 50%;
+    border: 2px solid #005500;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.6);
+    cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #0f0;
+    border-radius: 50%;
+    border: 2px solid #005500;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.6);
+    cursor: pointer;
+}
+
+#settings-screen p {
+    color: #888;
+    font-size: 10px;
+}
+
+/* Win Screen */
+.text-win {
+    color: #ffd700 !important;
+    text-shadow:
+        4px 4px 0 #b8860b,
+        0 0 30px rgba(255, 215, 0, 0.6),
+        0 0 60px rgba(255, 215, 0, 0.3) !important;
+    animation: winPulse 1s ease-in-out infinite !important;
+}
+
+@keyframes winPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        text-shadow: 4px 4px 0 #b8860b, 0 0 30px rgba(255, 215, 0, 0.6);
+    }
+
+    50% {
+        transform: scale(1.08);
+        text-shadow: 4px 4px 0 #b8860b, 0 0 50px rgba(255, 215, 0, 0.9), 0 0 80px rgba(255, 215, 0, 0.4);
+    }
+}
+
+#win-screen p {
+    color: #ffd700;
+}
+
+/* Mobile D-Pad */
+.mobile-dpad {
+    display: none;
+    width: 180px;
+    margin: 16px auto 0;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+.dpad-row {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.dpad-btn {
+    width: 56px;
+    height: 56px;
+    background: rgba(0, 255, 0, 0.12);
+    border: 2px solid rgba(0, 255, 0, 0.35);
+    border-radius: 10px;
+    color: #0f0;
+    font-size: 22px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.dpad-btn:active,
+.dpad-btn.pressed {
+    background: rgba(0, 255, 0, 0.35);
+    border-color: #0f0;
+    box-shadow: 0 0 12px rgba(0, 255, 0, 0.4);
+}
+
+.dpad-spacer {
+    width: 56px;
+    height: 56px;
+}
+
+/* Show D-pad on touch devices */
+@media (hover: none) and (pointer: coarse) {
+    .mobile-dpad {
+        display: block;
+    }
+
+    body {
+        padding-bottom: 20px;
     }
 }
 

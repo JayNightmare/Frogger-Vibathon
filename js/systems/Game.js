@@ -58,6 +58,11 @@ export class Game {
 			HARD: false,
 		};
 
+		// Overlay references
+		this.pauseOverlay = document.getElementById("pause-screen");
+		this.winOverlay = document.getElementById("win-screen");
+		this._restartHandler = null;
+
 		this.loop = this.loop.bind(this);
 	}
 
@@ -68,6 +73,10 @@ export class Game {
 		this.ui.startScreen.classList.add("hidden");
 		this.ui.gameOverScreen.classList.remove("active");
 		this.ui.gameOverScreen.classList.add("hidden");
+		if (this.winOverlay) {
+			this.winOverlay.classList.remove("active");
+			this.winOverlay.classList.add("hidden");
+		}
 
 		this.score = 0;
 		this.lives = 3;
@@ -82,6 +91,7 @@ export class Game {
 		this.obstacleManager = new ObstacleManager();
 		this.itemManager = new ItemManager();
 		this.goalFrogs = [];
+		this.deadFrogs = [];
 		this.isHorrorMode = false;
 		this.horrorTimer = 0;
 		this.triggeredHorror = {
@@ -90,8 +100,34 @@ export class Game {
 			HARD: false,
 		};
 
+		// Ensure any leftover horror music is killed before starting fresh
+		this.sound.stopHorrorMusic();
 		this.sound.startBGMusic();
 		requestAnimationFrame(this.loop);
+	}
+
+	togglePause() {
+		if (this.state === "PLAYING") {
+			this.state = "PAUSED";
+			this.sound.stopBGMusic();
+			if (this.pauseOverlay) {
+				this.pauseOverlay.classList.remove("hidden");
+				this.pauseOverlay.classList.add("active");
+			}
+		} else if (this.state === "PAUSED") {
+			this.state = "PLAYING";
+			this.firstFrame = true;
+			if (this.isHorrorMode) {
+				this.sound.startHorrorMusic();
+			} else {
+				this.sound.startBGMusic();
+			}
+			if (this.pauseOverlay) {
+				this.pauseOverlay.classList.remove("active");
+				this.pauseOverlay.classList.add("hidden");
+			}
+			requestAnimationFrame(this.loop);
+		}
 	}
 
 	die() {
@@ -101,7 +137,7 @@ export class Game {
 		this.deathTimer = this.deathDuration;
 		this.shakeTimer = this.shakeDuration;
 
-		// Record death location for horror glimpses
+		// Record death location for horror glimpses (capped at 10)
 		this.deadFrogs.push({
 			x: this.frog.x,
 			y: this.frog.y,
@@ -112,6 +148,7 @@ export class Game {
 			attacking: false,
 			timestamp: Date.now(),
 		});
+		if (this.deadFrogs.length > 10) this.deadFrogs.shift();
 
 		// 10% chance: Skyrim easter egg
 		if (!this.skyrimActive && Math.random() < 0.1) {
@@ -205,6 +242,8 @@ export class Game {
 	gameOver() {
 		this.state = "GAMEOVER";
 		this.sound.stopBGMusic();
+		this.sound.stopHorrorMusic();
+		this.isHorrorMode = false;
 		this.ui.gameOverScreen.classList.remove("hidden");
 		this.ui.gameOverScreen.classList.add("active");
 		this.ui.finalScore.textContent = `SCORE: ${this.score}`;
@@ -236,11 +275,17 @@ export class Game {
 			window.leaderboard.promptInitials(this.score);
 		}
 
-		const restartHandler = (e) => {
+		if (this._restartHandler) {
+			window.removeEventListener(
+				"keydown",
+				this._restartHandler,
+			);
+		}
+		this._restartHandler = (e) => {
 			if (e.key === " " && this.state === "GAMEOVER") {
 				window.removeEventListener(
 					"keydown",
-					restartHandler,
+					this._restartHandler,
 				);
 				const hsNotify =
 					this.ui.gameOverScreen.querySelector(
@@ -250,7 +295,63 @@ export class Game {
 				this.start();
 			}
 		};
-		window.addEventListener("keydown", restartHandler);
+		window.addEventListener("keydown", this._restartHandler);
+	}
+
+	win() {
+		this.state = "WIN";
+		this.sound.stopBGMusic();
+		this.sound.stopHorrorMusic();
+		this.isHorrorMode = false;
+		this.sound.play("goalReached");
+
+		if (this.winOverlay) {
+			this.winOverlay.querySelector(
+				"#win-score",
+			).textContent = `SCORE: ${this.score}`;
+			this.winOverlay.classList.remove("hidden");
+			this.winOverlay.classList.add("active");
+		}
+
+		// High score check on win too
+		if (this.score > this.highScore) {
+			this.highScore = this.score;
+			localStorage.setItem(
+				"froggerHighScore",
+				this.highScore,
+			);
+			this.ui.highScoreDisplay.textContent = `HI-SCORE: ${this.highScore}`;
+		}
+
+		if (
+			window.leaderboard &&
+			window.leaderboard.qualifies(this.score)
+		) {
+			window.leaderboard.promptInitials(this.score);
+		}
+
+		if (this._restartHandler) {
+			window.removeEventListener(
+				"keydown",
+				this._restartHandler,
+			);
+		}
+		this._restartHandler = (e) => {
+			if (e.key === " " && this.state === "WIN") {
+				window.removeEventListener(
+					"keydown",
+					this._restartHandler,
+				);
+				if (this.winOverlay) {
+					this.winOverlay.classList.remove(
+						"active",
+					);
+					this.winOverlay.classList.add("hidden");
+				}
+				this.start();
+			}
+		};
+		window.addEventListener("keydown", this._restartHandler);
 	}
 
 	updateScoreUI() {
@@ -330,7 +431,7 @@ export class Game {
 		if (this.difficulty !== prevDifficulty) {
 			this.updateDifficultyUI();
 			this.sound.play("levelUp");
-			this.obstacleManager.initLanes(this.difficulty);
+			this.obstacleManager.transitionTo(this.difficulty);
 		}
 
 		// Exact Horror Triggers based on score
@@ -410,6 +511,13 @@ export class Game {
 
 			this.addScore(10);
 			this.level++;
+
+			// Win condition: 7 frogs placed at the goal
+			if (this.goalFrogs.length >= 7) {
+				this.addScore(50); // Completion bonus
+				this.win();
+				return;
+			}
 
 			// Exact Horror Trigger for Easy Mode (Level 3 = reached goal 2 times)
 			if (!this.triggeredHorror.EASY && this.level === 3) {
