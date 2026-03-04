@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Retro Arcade Frogger - A classic arcade game built with vanilla JavaScript for the Vibathon hackathon.">
+    <title>Retro Frogger — Arcade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div id="game-container">
+        <!-- HUD -->
+        <div class="hud">
+            <div class="hud-row">
+                <div id="score-display">SCORE: 0</div>
+                <div id="difficulty-display" class="difficulty-easy">EASY</div>
+                <div id="high-score-display">HI-SCORE: 0</div>
+            </div>
+            <div class="hud-row">
+                <div id="lives-display">🐸🐸🐸</div>
+            </div>
+        </div>
+
+        <!-- Game Canvas -->
+        <div class="canvas-wrapper">
+            <canvas id="gameCanvas" width="560" height="640"></canvas>
+            <div class="crt-overlay"></div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="overlay active">
+            <h1>FROGGER</h1>
+            <p>USE ARROW KEYS OR WASD TO MOVE</p>
+            <p>CATCH THE GOLDEN FLY FOR BONUS POINTS!</p>
+            <p class="blink">PRESS ANY KEY TO START</p>
+
+            <div class="leaderboard">
+                <h2>TOP SCORES</h2>
+                <ol id="leaderboard-list" class="leaderboard-list"></ol>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="overlay hidden">
+            <h1 class="text-red">GAME OVER</h1>
+            <p id="final-score">SCORE: 0</p>
+
+            <div id="initials-prompt" class="initials-prompt">
+                <p>ENTER YOUR INITIALS</p>
+                <input type="text" maxlength="3" placeholder="AAA" id="initials-input" autocomplete="off">
+                <p>PRESS ENTER TO SUBMIT</p>
+            </div>
+
+            <p class="blink mt-2">PRESS SPACE TO RESTART</p>
+        </div>
+    </div>
+
+    <!-- Skyrim Easter Egg Overlay -->
+    <div id="skyrim-overlay">
+        <div class="skyrim-credits">
+            <div class="credits-scroll">
+                <h2>IN LOVING MEMORY OF FROG #4827</h2>
+                <p class="credits-subtitle">~ A Vibathon Production ~</p>
+
+                <div class="credits-role">EXECUTIVE PRODUCER</div>
+                <div class="credits-name">Captain Jean-Luc Picard</div>
+
+                <div class="credits-role">LEAD FROG WRANGLER</div>
+                <div class="credits-name">Lieutenant Commander Worf</div>
+
+                <div class="credits-role">ROAD SAFETY CONSULTANT</div>
+                <div class="credits-name">Dr. Leonard "Bones" McCoy</div>
+                <div class="credits-quote">"Dammit Jim, I'm a doctor, not a crossing guard!"</div>
+
+                <div class="credits-role">PIXEL ART DIRECTOR</div>
+                <div class="credits-name">Commander Data</div>
+                <div class="credits-quote">"I have rendered 4,217 individual pixels with 99.97% accuracy."</div>
+
+                <div class="credits-role">HORROR MODE DESIGNER</div>
+                <div class="credits-name">Q (no last name needed)</div>
+
+                <div class="credits-role">BLOOD RIVER CONSULTANT</div>
+                <div class="credits-name">Gul Dukat</div>
+
+                <div class="credits-role">STOMPING CHOREOGRAPHER</div>
+                <div class="credits-name">Lt. Commander Geordi La Forge</div>
+                <div class="credits-quote">"I literally cannot see the problem here."</div>
+
+                <div class="credits-role">BUG TESTER (ATE ALL THE BUGS)</div>
+                <div class="credits-name">Ensign Neelix</div>
+
+                <div class="credits-role">MOTIVATIONAL SUPPORT</div>
+                <div class="credits-name">Counselor Deanna Troi</div>
+                <div class="credits-quote">"I sense... great frustration from the player."</div>
+
+                <div class="credits-role">SOUND DESIGN</div>
+                <div class="credits-name">Lt. Uhura</div>
+                <div class="credits-quote">"I'm receiving a distress signal... it's the frog."</div>
+
+                <div class="credits-role">GOLDEN FLY PROCUREMENT</div>
+                <div class="credits-name">Quark, Son of Keldar</div>
+                <div class="credits-quote">"Every fly has its price."</div>
+
+                <div class="credits-role">CAFETERIA SERVICES</div>
+                <div class="credits-name">Chef Riker (with extra beard oil)</div>
+
+                <div class="credits-role">SKYRIM INTEGRATION SPECIALIST</div>
+                <div class="credits-name">Seven of Nine (Tertiary Adjunct)</div>
+                <div class="credits-quote">"Resistance to this meme is futile."</div>
+
+                <div class="credits-role">LEGAL COUNSEL</div>
+                <div class="credits-name">Constable Odo</div>
+                <div class="credits-quote">"This game violates at least 47 Bajoran statutes."</div>
+
+                <div class="credits-role">LEADERBOARD ARCHITECT</div>
+                <div class="credits-name">Chief Miles O'Brien</div>
+                <div class="credits-quote">"It keeps breaking and I keep fixing it. Story of my life."</div>
+
+                <div class="credits-role">CATERING & EMOTIONAL SUPPORT TEA</div>
+                <div class="credits-name">Captain Picard (again)</div>
+                <div class="credits-quote">"Tea. Earl Grey. Hot. ...And a new frog."</div>
+
+                <div class="credits-role">NO FROGS WERE HARMED</div>
+                <div class="credits-name">...okay maybe a few</div>
+
+                <p class="credits-subtitle">🐸 REST IN PIXELS 🐸</p>
+            </div>
+        </div>
+
+        <video id="skyrim-video" src="assets/video/skyrim.mp4" preload="auto"></video>
+
+        <div class="skyrim-frog">
+            <img src="assets/images/dead-frog.png" alt="RIP Frog" id="dead-frog-img">
+            <p class="rip-text">R.I.P.</p>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>
